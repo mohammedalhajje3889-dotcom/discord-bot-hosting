@@ -15,3 +15,5 @@ __pycache__/
 # نظام
 .DS_Store
 Thumbs.db
+*.bak
+*.backup
