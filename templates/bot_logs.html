@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}سجلات {{ bot.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-file-alt"></i> سجلات {{ bot.name }}</h2>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> رجوع</a>
+</div>
+
+<div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+            <span class="badge {{ 'bg-success' if bot.status == 'running' else 'bg-danger' }}">
+                {{ 'يعمل' if bot.status == 'running' else 'متوقف' }}
+            </span>
+            {% if bot.process_id %}<span class="ms-2 text-muted">PID: {{ bot.process_id }}</span>{% endif %}
+        </span>
+        <div>
+            {% if bot.status == 'running' %}
+            <form method="POST" action="{{ url_for('stop_bot_route', bot_id=bot.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-stop"></i> إيقاف</button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('start_bot_route', bot_id=bot.id) }}" class="d-inline">
+                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-play"></i> تشغيل</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="log-container" style="height:500px;overflow-y:auto;background:#1e1e1e;color:#d4d4d4;padding:15px;border-radius:5px;font-family:monospace;font-size:14px;">
+            {% if logs %}
+                {% for line in logs %}
+                <div class="log-line">{{ line }}</div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-file-alt fa-3x mb-3"></i>
+                    <p>لا توجد سجلات بعد</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-footer">
+        <button class="btn btn-outline-primary btn-sm" onclick="location.reload()"><i class="fas fa-sync-alt"></i> تحديث</button>
+    </div>
+</div>
+
+<script>
+var container = document.getElementById('logContainer') || document.querySelector('.log-container');
+if (container) container.scrollTop = container.scrollHeight;
+setInterval(function(){ location.reload(); }, 5000);
+</script>
+{% endblock %}
