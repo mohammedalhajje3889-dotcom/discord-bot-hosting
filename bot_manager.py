@@ -15,18 +15,31 @@ def extract_zip(zip_path, extract_path):
         z.extractall(extract_path)
 
 
+def _which(cmd):
+    try:
+        subprocess.run(['which', cmd], capture_output=True, text=True, timeout=5, check=True)
+        return True
+    except Exception:
+        return False
+
 def install_dependencies(bot_folder):
     if os.path.exists(os.path.join(bot_folder, 'package.json')):
+        if not _which('npm'):
+            return False, 'Node.js غير مثبت في بيئة الاستضافة. لا يمكن تثبيت حزم npm.'
         try:
-            subprocess.run(['npm', 'install'], cwd=bot_folder,
-                          capture_output=True, text=True, timeout=300)
+            r = subprocess.run(['npm', 'install'], cwd=bot_folder,
+                              capture_output=True, text=True, timeout=300)
+            if r.returncode != 0:
+                return False, f'فشل تثبيت حزم npm: {r.stderr[:200]}'
             return True, 'Node.js dependencies installed'
         except Exception as e:
             return False, f'npm install failed: {str(e)}'
     if os.path.exists(os.path.join(bot_folder, 'requirements.txt')):
         try:
-            subprocess.run(['pip', 'install', '-r', 'requirements.txt'],
-                          cwd=bot_folder, capture_output=True, text=True, timeout=300)
+            r = subprocess.run(['pip', 'install', '-r', 'requirements.txt'],
+                              cwd=bot_folder, capture_output=True, text=True, timeout=300)
+            if r.returncode != 0:
+                return False, f'فشل تثبيت حزم Python: {r.stderr[:200]}'
             return True, 'Python dependencies installed'
         except Exception as e:
             return False, f'pip install failed: {str(e)}'
@@ -86,6 +99,8 @@ def start_bot(bot):
     if main_file.endswith('.py'):
         command = ['python3' if os.name == 'posix' else 'python', main_file]
     elif main_file.endswith('.js'):
+        if not _which('node'):
+            return False, 'Node.js غير مثبت في بيئة الاستضافة. لا يمكن تشغيل بوتات JavaScript.'
         command = ['node', main_file]
     else:
         return False, 'نوع الملف غير مدعوم'
