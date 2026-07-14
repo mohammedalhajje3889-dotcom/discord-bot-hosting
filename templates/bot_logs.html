@@ -9,8 +9,8 @@
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>
-            <span class="badge {{ 'bg-success' if bot.status == 'running' else 'bg-danger' }}">
-                {{ 'يعمل' if bot.status == 'running' else 'متوقف' }}
+            <span class="badge {{ 'bg-success' if bot.status == 'running' else 'bg-danger' if bot.status == 'stopped' else 'bg-warning' }}">
+                {{ 'يعمل' if bot.status == 'running' else 'متوقف' if bot.status == 'stopped' else 'جاري التجهيز' if bot.status == 'preparing' else 'خطأ' }}
             </span>
             {% if bot.process_id %}<span class="ms-2 text-muted">PID: {{ bot.process_id }}</span>{% endif %}
         </span>

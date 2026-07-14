@@ -14,8 +14,8 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <h5 class="card-title mb-0"><i class="fab fa-discord"></i> {{ bot.name }}</h5>
-                    <span class="badge {{ 'bg-success' if bot.status == 'running' else 'bg-danger' if bot.status == 'stopped' else 'bg-warning' }}">
-                        {{ 'يعمل' if bot.status == 'running' else 'متوقف' if bot.status == 'stopped' else 'خطأ' }}
+                    <span class="badge {{ 'bg-success' if bot.status == 'running' else 'bg-danger' if bot.status == 'stopped' else 'bg-warning' if bot.status == 'preparing' else 'bg-warning' }}">
+                        {% if bot.status == 'running' %}يعمل{% elif bot.status == 'stopped' %}متوقف{% elif bot.status == 'preparing' %}جاري التجهيز{% elif bot.status == 'error' %}خطأ{% else %}{{ bot.status }}{% endif %}
                     </span>
                 </div>
                 <p class="text-muted small"><i class="fas fa-calendar"></i> {{ bot.created_at }}</p>

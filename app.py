@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import Config
 from database import init_db, User, Bot
-from bot_manager import start_bot, stop_bot, get_bot_logs, start_monitor
+from bot_manager import start_bot, stop_bot, get_bot_logs, start_prepare_async, start_monitor
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -129,8 +129,12 @@ def new_bot():
             os.makedirs(user_folder, exist_ok=True)
             zip_filename = f'{name}_{current_user.id}.zip'
             zip_file.save(os.path.join(user_folder, zip_filename))
-            Bot.create(current_user.id, name, bot_token, zip_filename)
-            flash('تم إنشاء البوت بنجاح', 'success')
+            bot = Bot.create(current_user.id, name, bot_token, zip_filename)
+
+            # Prepare bot folder in background (extract + install deps)
+            start_prepare_async(bot)
+
+            flash('تم إنشاء البوت بنجاح. جاري تجهيز الملفات...', 'success')
             return redirect(url_for('dashboard'))
         except Exception as e:
             flash(f'حدث خطأ: {str(e)}', 'error')
@@ -173,12 +177,11 @@ def update_bot(bot_id):
             zip_filename = f'{name}_{current_user.id}.zip'
             zip_file.save(os.path.join(user_folder, zip_filename))
             bot.zip_filename = zip_filename
-            bf = os.path.join(Config.BOTS_FOLDER, str(bot_id))
-            if os.path.exists(bf):
-                import shutil
-                shutil.rmtree(bf)
             if bot.status == 'running':
                 stop_bot(bot)
+            start_prepare_async(bot)
+            flash('جاري تجهيز الملفات...', 'success')
+            return redirect(url_for('dashboard'))
         bot.update(name=name, bot_token=bot_token)
         bot.update_status('stopped')
         flash('تم تحديث البوت بنجاح', 'success')
@@ -196,7 +199,13 @@ def start_bot_route(bot_id):
     if bot.status == 'running':
         flash('البوت يعمل بالفعل', 'warning')
         return redirect(url_for('dashboard'))
+    if bot.status == 'preparing':
+        flash('البوت قيد التجهيز، الرجاء الانتظار', 'warning')
+        return redirect(url_for('dashboard'))
     ok, msg = start_bot(bot)
+    if not ok:
+        # Ensure status is marked stopped on failure
+        bot.update_status('stopped')
     flash(msg, 'success' if ok else 'error')
     return redirect(url_for('dashboard'))
 
@@ -208,10 +217,12 @@ def stop_bot_route(bot_id):
     if not bot or bot.user_id != current_user.id:
         flash('البوت غير موجود', 'error')
         return redirect(url_for('dashboard'))
-    if bot.status != 'running':
+    if bot.status not in ('running', 'error'):
         flash('البوت غير يعمل', 'warning')
         return redirect(url_for('dashboard'))
     ok, msg = stop_bot(bot)
+    if bot.status == 'error':
+        bot.update_status('stopped')
     flash(msg, 'success' if ok else 'error')
     return redirect(url_for('dashboard'))
 
