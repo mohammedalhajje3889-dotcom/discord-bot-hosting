@@ -119,6 +119,16 @@ def update_bot(bot_id):
     
     return render_template('dashboard/bot_form.html', bot=bot, update=True)
 
+@dashboard_bp.route('/bot/<int:bot_id>')
+@login_required
+def view_bot(bot_id):
+    bot = Bot.get_by_id(bot_id)
+    if not bot or bot.user_id != current_user.id:
+        flash('البوت غير موجود', 'error')
+        return redirect(url_for('dashboard.index'))
+    logs = get_bot_logs(bot_id)
+    return render_template('dashboard/bot_logs.html', bot=bot, logs=logs)
+
 @dashboard_bp.route('/bot/<int:bot_id>/start', methods=['POST'])
 @login_required
 def start_bot_route(bot_id):
