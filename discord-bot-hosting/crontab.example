@@ -1,0 +1,12 @@
+# Discord Bot Hosting - Crontab Example
+# Add these lines to your crontab with: crontab -e
+
+# Keep the application alive by pinging every 30 seconds
+# This uses a background script instead of cron since cron minimum is 1 minute
+*/1 * * * * /root/discord-bot-hosting/venv/bin/python /root/discord-bot-hosting/keep_alive.py http://localhost:5000 60 >> /root/discord-bot-hosting/logs/keep_alive.log 2>&1
+
+# Optional: Restart the application daily at 3 AM
+0 3 * * * systemctl restart discord-bot-hosting
+
+# Optional: Clean up old logs weekly
+0 0 * * 0 find /root/discord-bot-hosting/logs -name "*.log" -mtime +30 -delete

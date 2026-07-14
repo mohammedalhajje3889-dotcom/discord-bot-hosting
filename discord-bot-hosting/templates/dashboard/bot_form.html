@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة بوت جديد - استضافة بوتات ديسكورد{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body p-4">
+                <h3 class="card-title text-center mb-4">
+                    <i class="fas fa-plus-circle"></i> إضافة بوت جديد
+                </h3>
+                
+                <form method="POST" action="{{ url_for('dashboard.new_bot') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">اسم البوت</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-robot"></i></span>
+                            <input type="text" class="form-control" id="name" name="name" required 
+                                   placeholder="مثال: بوت الترحيب">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bot_token" class="form-label">توكن البوت (Bot Token)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input type="password" class="form-control" id="bot_token" name="bot_token" required
+                                   placeholder="أدخل توكن البوت من Discord Developer Portal">
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            يمكنك الحصول على التوكن من 
+                            <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a>
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="zip_file" class="form-label">ملف ZIP للبوت</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-file-archive"></i></span>
+                            <input type="file" class="form-control" id="zip_file" name="zip_file" required accept=".zip">
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i>
+                            يجب أن يحتوي الملف على ملف رئيسي (index.js, main.js, bot.js, main.py, bot.py)
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> ملاحظات مهمة:</h6>
+                        <ul class="mb-0">
+                            <li>يجب أن يحتوي مجلد البوت على ملف package.json (لبوتات Node.js) أو requirements.txt (لبوتات Python)</li>
+                            <li>سيتم تثبيت التبعيات تلقائياً</li>
+                            <li>التوكن会被حفظ بشكل آمن في قاعدة البيانات</li>
+                            <li>يمكنك تشغيل وإيقاف البوت في أي وقت</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> رفع وإنشاء البوت
+                        </button>
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right"></i> رجوع
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
