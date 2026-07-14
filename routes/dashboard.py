@@ -60,16 +60,64 @@ def new_bot():
     
     return render_template('dashboard/bot_form.html')
 
-@dashboard_bp.route('/bot/<int:bot_id>')
+@dashboard_bp.route('/bot/<int:bot_id>/update', methods=['GET', 'POST'])
 @login_required
-def view_bot(bot_id):
+def update_bot(bot_id):
     bot = Bot.get_by_id(bot_id)
     if not bot or bot.user_id != current_user.id:
         flash('البوت غير موجود', 'error')
         return redirect(url_for('dashboard.index'))
     
-    logs = get_bot_logs(bot_id)
-    return render_template('dashboard/bot_logs.html', bot=bot, logs=logs)
+    if request.method == 'POST':
+        name = request.form.get('name')
+        bot_token = request.form.get('bot_token')
+        
+        if not name or not bot_token:
+            flash('جميع الحقول مطلوبة', 'error')
+            return render_template('dashboard/bot_form.html', bot=bot, update=True)
+        
+        import os
+        from config import Config
+        import shutil
+        
+        if 'zip_file' in request.files and request.files['zip_file'].filename:
+            zip_file = request.files['zip_file']
+            if not zip_file.filename.endswith('.zip'):
+                flash('يجب أن يكون الملف بصيغة ZIP', 'error')
+                return render_template('dashboard/bot_form.html', bot=bot, update=True)
+            
+            # Delete old zip
+            old_zip = os.path.join(Config.UPLOAD_FOLDER, str(current_user.id), bot.zip_filename)
+            if os.path.exists(old_zip):
+                os.remove(old_zip)
+            
+            # Save new zip
+            user_folder = os.path.join(Config.UPLOAD_FOLDER, str(current_user.id))
+            os.makedirs(user_folder, exist_ok=True)
+            zip_filename = f"{name}_{current_user.id}.zip"
+            zip_path = os.path.join(user_folder, zip_filename)
+            zip_file.save(zip_path)
+            bot.zip_filename = zip_filename
+            
+            # Delete extracted bot folder so it gets re-extracted on next start
+            bot_folder = os.path.join(Config.BOTS_FOLDER, str(bot_id))
+            if os.path.exists(bot_folder):
+                shutil.rmtree(bot_folder)
+            
+            # Stop bot if running
+            if bot.status == 'running':
+                from bot_manager.process_manager import stop_bot
+                stop_bot(bot)
+        
+        # Update database
+        bot.update(name=name, bot_token=bot_token)
+        bot.status = 'stopped'
+        bot.update_status('stopped')
+        
+        flash('تم تحديث البوت بنجاح', 'success')
+        return redirect(url_for('dashboard.index'))
+    
+    return render_template('dashboard/bot_form.html', bot=bot, update=True)
 
 @dashboard_bp.route('/bot/<int:bot_id>/start', methods=['POST'])
 @login_required

@@ -146,6 +146,20 @@ class Bot:
         if process_id is not None:
             self.process_id = process_id
     
+    def update(self, name=None, bot_token=None, zip_filename=None):
+        db = get_db()
+        if name:
+            db.execute('UPDATE bots SET name = ? WHERE id = ?', (name, self.id))
+            self.name = name
+        if bot_token:
+            db.execute('UPDATE bots SET bot_token = ? WHERE id = ?', (bot_token, self.id))
+            self.bot_token = bot_token
+        if zip_filename:
+            db.execute('UPDATE bots SET zip_filename = ? WHERE id = ?', (zip_filename, self.id))
+            self.zip_filename = zip_filename
+        db.commit()
+        db.close()
+
     def delete(self):
         db = get_db()
         db.execute('DELETE FROM bots WHERE id = ?', (self.id,))

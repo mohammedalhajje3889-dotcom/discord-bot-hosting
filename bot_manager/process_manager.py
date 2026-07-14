@@ -46,18 +46,18 @@ def install_dependencies(bot_folder):
     return True, 'No dependencies to install'
 
 def find_main_file(bot_folder):
-    """Find the main file to run"""
-    # Check for common main files
-    common_files = ['index.js', 'main.js', 'bot.js', 'app.js', 'main.py', 'bot.py', 'app.py']
+    """Find the main file to run - searches recursively in subdirectories"""
+    common_files = ['index.js', 'main.js', 'bot.js', 'app.js', 'main.py', 'bot.py', 'app.py', 'run.py', 'server.py', 'bot.py']
     
-    for file in common_files:
-        if os.path.exists(os.path.join(bot_folder, file)):
-            return file
+    for root, dirs, files in os.walk(bot_folder):
+        for file in files:
+            if file in common_files:
+                return os.path.relpath(os.path.join(root, file), bot_folder)
     
-    # If no common file found, look for any .js or .py file
-    for file in os.listdir(bot_folder):
-        if file.endswith('.js') or file.endswith('.py'):
-            return file
+    for root, dirs, files in os.walk(bot_folder):
+        for file in files:
+            if file.endswith(('.js', '.py')):
+                return os.path.relpath(os.path.join(root, file), bot_folder)
     
     return None
 
@@ -87,10 +87,14 @@ def start_bot(bot):
     if not success:
         return False, message
     
-    # Find main file
+    # Find main file with listing
     main_file = find_main_file(bot_folder)
     if not main_file:
-        return False, 'لم يتم العثور على ملف رئيسي'
+        files_list = []
+        for root, dirs, files in os.walk(bot_folder):
+            for f in files:
+                files_list.append(os.path.relpath(os.path.join(root, f), bot_folder))
+        return False, f'لم يتم العثور على ملف رئيسي (index.js/main.py...). الملفات المستخرجة: {files_list[:10]}'
     
     # Determine command
     if main_file.endswith('.js'):

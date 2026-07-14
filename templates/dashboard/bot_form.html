@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}إضافة بوت جديد - استضافة بوتات ديسكورد{% endblock %}
+{% block title %}{% if update %}تحديث البوت{% else %}إضافة بوت جديد{% endif %} - استضافة بوتات ديسكورد{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -8,16 +8,17 @@
         <div class="card shadow">
             <div class="card-body p-4">
                 <h3 class="card-title text-center mb-4">
-                    <i class="fas fa-plus-circle"></i> إضافة بوت جديد
+                    <i class="fas {{ 'fa-edit' if update else 'fa-plus-circle' }}"></i> 
+                    {% if update %}تحديث البوت{% else %}إضافة بوت جديد{% endif %}
                 </h3>
                 
-                <form method="POST" action="{{ url_for('dashboard.new_bot') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ url_for('dashboard.update_bot', bot_id=bot.id) if update else url_for('dashboard.new_bot') }}" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="name" class="form-label">اسم البوت</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-robot"></i></span>
                             <input type="text" class="form-control" id="name" name="name" required 
-                                   placeholder="مثال: بوت الترحيب">
+                                   placeholder="مثال: بوت الترحيب" value="{{ bot.name if update else '' }}">
                         </div>
                     </div>
                     
@@ -26,7 +27,8 @@
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-key"></i></span>
                             <input type="password" class="form-control" id="bot_token" name="bot_token" required
-                                   placeholder="أدخل توكن البوت من Discord Developer Portal">
+                                   placeholder="أدخل توكن البوت من Discord Developer Portal"
+                                   value="{{ bot.bot_token if update else '' }}">
                         </div>
                         <small class="text-muted">
                             <i class="fas fa-info-circle"></i>
@@ -36,14 +38,16 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="zip_file" class="form-label">ملف ZIP للبوت</label>
+                        <label for="zip_file" class="form-label">
+                            ملف ZIP للبوت {% if update %}<small class="text-muted">(اتركه فارغاً إذا لا تريد تغييره)</small>{% endif %}
+                        </label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-file-archive"></i></span>
-                            <input type="file" class="form-control" id="zip_file" name="zip_file" required accept=".zip">
+                            <input type="file" class="form-control" id="zip_file" name="zip_file" accept=".zip" {{ 'required' if not update }}>
                         </div>
                         <small class="text-muted">
                             <i class="fas fa-info-circle"></i>
-                            يجب أن يحتوي الملف على ملف رئيسي (index.js, main.js, bot.js, main.py, bot.py)
+                            يجب أن يحتوي الملف على ملف رئيسي (index.js, main.js, bot.js, main.py, bot.py, run.py)
                         </small>
                     </div>
                     
@@ -52,14 +56,15 @@
                         <ul class="mb-0">
                             <li>يجب أن يحتوي مجلد البوت على ملف package.json (لبوتات Node.js) أو requirements.txt (لبوتات Python)</li>
                             <li>سيتم تثبيت التبعيات تلقائياً</li>
-                            <li>التوكن会被حفظ بشكل آمن في قاعدة البيانات</li>
+                            <li>التوكن يحفظ بشكل آمن في قاعدة البيانات</li>
                             <li>يمكنك تشغيل وإيقاف البوت في أي وقت</li>
                         </ul>
                     </div>
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-upload"></i> رفع وإنشاء البوت
+                            <i class="fas {{ 'fa-save' if update else 'fa-upload' }}"></i> 
+                            {% if update %}حفظ التحديثات{% else %}رفع وإنشاء البوت{% endif %}
                         </button>
                         <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
                             <i class="fas fa-arrow-right"></i> رجوع
